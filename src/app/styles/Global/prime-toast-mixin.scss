@@ -1,0 +1,10 @@
+@import './variable.scss';
+
+@mixin toastCss {
+    .p-toast-message-error {
+        background-color: $color-error-toast-body-bg !important;
+    }
+    .p-toast-message-error .p-toast-detail {
+        color: $color-error-toast-detail !important;
+    }
+}
