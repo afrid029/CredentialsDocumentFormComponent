@@ -4,7 +4,7 @@
     <ng-template #list let-user>
         <div class="bg">
             <div *ngFor="let item of users(); let first = first" class="col-span-12 item">
-                <div>{{item.certification}}</div>
+                <div>{{item.institution}}</div>
                 <div class="btn-grp">
                   <p-button (click)="showDialog(item.Id)" label="Edit" />
                 </div>
@@ -15,6 +15,6 @@
 
 @if(visible()) {
 
-    <app-reactive-form (onClose) = "onClose()" [editData]="filteredData()"></app-reactive-form>
+    <app-reactive-form (onClose) = "onClose()" (onCreate)="onCreate($event)" (onUpdate)="onUpdate($event)" [editData]="filteredData()"></app-reactive-form>
 }
 <router-outlet />

@@ -43,7 +43,6 @@ import { AwardedDateWithExpiryDate } from '../../Validators/AwardedDateWithExpir
     PrimeInputComponent,
     ReactiveFormsModule,
     PrimeFilterDropdownComponent,
-    PrimeDropdownComponent,
     PrimeDatepickerComponent,
     ButtonComponent,
     DataLoaderComponent,
@@ -134,6 +133,9 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() visible: boolean = true;
   @Input() editData: any = {};
   @Output() onClose = new EventEmitter();
+  @Output() onCreate = new EventEmitter();
+  @Output() onUpdate = new EventEmitter();
+
     customErrors : Record<string,string[]> = {};
 
   constructor(
@@ -211,6 +213,11 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
       );
 
       this.loading.set(false);
+    }else {
+     this.editData && this.editData.Id 
+     ? this.onUpdate.emit(this.dynamicForm?.value)
+     : this.onCreate.emit(this.dynamicForm?.value);
+      this.onHide();
     }
   }
 
