@@ -51,6 +51,8 @@ export class PrimeInputComponent<T> extends CustomControlValueAccessorDirective<
 
 
   isError(): boolean {    
+    console.log(this.control?.errors?.[0]);
+    
    const keys = Object.keys(this.control?.parent?.errors ?? {});
    this.crossErrorMessages = {};
    this.customErrors?.forEach(cust =>{

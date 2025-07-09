@@ -3,6 +3,7 @@ import {
   AfterViewInit,
   Component,
   EventEmitter,
+  inject,
   Input,
   OnDestroy,
   OnInit,
@@ -11,13 +12,14 @@ import {
 } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { PrimeInputComponent } from '../../prime-input/prime-input.component';
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { PrimeFilterDropdownComponent } from '../../prime-filter-dropdown/prime-filter-dropdown/prime-filter-dropdown.component';
@@ -33,6 +35,10 @@ import { GreaterThanDateValidator } from '../../Validators/GreaterThanDate.valid
 import { NotGreaterThanToday } from '../../Validators/NotGreaterThanToday.validator';
 import { CharectorLimit } from '../../Validators/CharectorLimit.validator';
 import { AwardedDateWithExpiryDate } from '../../Validators/AwardedDateWithExpiryDate.validator';
+import { LengthRestriction } from '../../Validators/LengthRestriction.validator';
+import { PatternMatch } from '../../Validators/PatternMatch.validator';
+import { DateComparer } from '../../Validators/DateComparer.validator';
+import { FormControlDateComparer } from '../../Validators/FormControlDateComparer.validator';
 
 @Component({
   selector: 'app-reactive-form',
@@ -45,9 +51,7 @@ import { AwardedDateWithExpiryDate } from '../../Validators/AwardedDateWithExpir
     PrimeFilterDropdownComponent,
     PrimeDatepickerComponent,
     ButtonComponent,
-    DataLoaderComponent,
-    Toast,
-    ToastModule,
+    DataLoaderComponent
   ],
 
   providers: [],
@@ -59,6 +63,9 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
   disable = signal<boolean>(false);
   loading = signal<boolean>(false);
   dataLoaded = signal<boolean>(true);
+  customValidators: ValidatorFn[] = [];
+  today : Date = new Date();
+  dob : Date = new Date(2012, 4, 24);
 
   degreeType = signal<Record<string, string>[]>([
     { type: 'Doctoral' },
@@ -130,56 +137,76 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
   ]);
   minDate = signal<Date | undefined>(undefined);
 
-  @Input() visible: boolean = true;
-  @Input() editData: any = {};
-  @Output() onClose = new EventEmitter();
-  @Output() onCreate = new EventEmitter();
-  @Output() onUpdate = new EventEmitter();
+  editData: any = {};
 
-    customErrors : Record<string,string[]> = {};
+  customErrors: Record<string, string[]> = {};
 
-  constructor(
-    private fb: FormBuilder,
-    private dataServ: GetDataService,
-    private toastServ: ToastService
-  ) {}
+  private _fb : FormBuilder = inject(FormBuilder);
+  private _dataServ : GetDataService = inject(GetDataService);
+  private _toastServ : ToastService = inject(ToastService);
+  private _config : DynamicDialogConfig = inject(DynamicDialogConfig);
+  private _ref : DynamicDialogRef = inject(DynamicDialogRef);
+
 
   ngOnInit(): void {
-    const today = new Date();
+  
     this.minDate.set(
-      new Date(today.getFullYear() - 10, today.getMonth(), today.getDate())
+      new Date(this.today.getFullYear() - 10, this.today.getMonth(), this.today.getDate())
     );
 
-    const dob = new Date(2012, 4, 24);
-    this.dynamicForm = this.fb.group({
-      institution : new FormControl('',[Validators.required, CharectorLimit]),
-      certification : new FormControl('', [Validators.required, CharectorLimit]),
-      country: new FormControl('', [Validators.required]),
-      city : new FormControl('', [Validators.required, CharectorLimit]),
-      awardeddate : new FormControl('', [Validators.required, GreaterThanDateValidator(dob), NotGreaterThanToday]),
-      expirydate : new FormControl('',[GreaterThanDateValidator(dob)])
-    },{
-      validators : [AwardedDateWithExpiryDate]
-    });
-    
+  
+    this.dynamicForm = this._fb.group(
+      {
+        institution: new FormControl('', [Validators.required, 
+          //  CharectorLimit,
+          LengthRestriction(100,'lte','Exceeded maximum character limit')
+        ]),
+        certification: new FormControl('', [
+          Validators.required,
+          // CharectorLimit,
+          LengthRestriction(100,'lte','Exceeded maximum character limit')
+        ]),
+        country: new FormControl('', [Validators.required]),
+        city: new FormControl('', [Validators.required,
+          //  CharectorLimit,
+          PatternMatch('City only allow alphabets and spaces and no special characters.'),
+          LengthRestriction(4, 'gte' ,'Invalid minimum character count'),
+          LengthRestriction(100,'lte','Exceeded maximum character limit'),
+          
+          ]),
+        awardeddate: new FormControl('', [
+          Validators.required,
+          // GreaterThanDateValidator(this.dob),\
+          DateComparer(this.dob,'gte','Awarded date cannot be less than date of birth'),
+          DateComparer(this.today,'lte','Awarded Date cannot be greater than today'),
+          // NotGreaterThanToday,
+        ]),
+        expirydate: new FormControl('', [ DateComparer(this.dob,'gt','Expiry Date should be greater than date of birth')]),
+      }
+      // {
+      //   validators: [AwardedDateWithExpiryDate],
+      // }    
+    );
+     this.customValidators = [
+      FormControlDateComparer('expirydate','awardeddate','gte','Expiry date should be greater than awarded date'),
+      FormControlDateComparer('awardeddate','expirydate','lte','Awarded date should be less than expiry date'),
+      FormControlDateComparer('awardeddate','expirydate','neq','Awarded date and expiry date should not be in the same date'),
+    ]
+     this.dynamicForm?.setValidators(this.customValidators);
+
     this.loadCustomValidators();
 
     // this.getAllCountry();
   }
 
   loadCustomValidators() {
-    this.customErrors['expirydate'] = ['AwardedDateWithExpiryDate']
-    if (this.dynamicForm) {
-    //  this.dynamicForm.get('awardeddate')?.valueChanges.subscribe(() => {
-    //   this.dynamicForm?.get('expirydate')?.touched
-    //     ? this.dynamicForm?.get('expirydate')?.updateValueAndValidity()
-    //     :'';
-    //  })
-    }
+    this.customErrors['expirydate'] = ['FormControlDateComparerGte','FormControlDateComparerNeq'];
+    this.customErrors['awardeddate'] = ['FormControlDateComparerLte','FormControlDateComparerNeq'];
   }
 
   ngAfterViewInit(): void {
     // console.log(this.editData);
+    this.editData = this._config.data;
     if (this.editData && this.editData.Id) {
       this.dataLoaded.set(false);
 
@@ -197,7 +224,7 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editData = {};
   }
   getAllCountry() {
-    this.dataServ.getCountry().subscribe((data) => {
+    this._dataServ.getCountry().subscribe((data) => {
       this.countries.set(data);
     });
   }
@@ -207,21 +234,16 @@ export class ReactiveFormComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log(this.dynamicForm?.value);
 
     if (this.dynamicForm?.invalid) {
-      this.toastServ.showToastError(
+      this._toastServ.showToastError(
         'Invalid',
         'There are validation issues in your submission. Please review the form and try again.'
       );
 
       this.loading.set(false);
-    }else {
-     this.editData && this.editData.Id 
-     ? this.onUpdate.emit(this.dynamicForm?.value)
-     : this.onCreate.emit(this.dynamicForm?.value);
-      this.onHide();
+    } else {
+      this._ref.close(this.dynamicForm?.value);
     }
   }
 
-  onHide() {
-    this.onClose.emit();
-  }
+
 }

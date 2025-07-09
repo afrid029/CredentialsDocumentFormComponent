@@ -19,6 +19,8 @@ export class PrimeErrorComponent implements OnInit, OnChanges {
 
   errorMessages = signal<Record<string, string>>({});
   customErrorMessages: Record<string, string> | any = {};
+  controllerError : string | any = '';
+  crossError : string = '';
 
   ngOnInit(): void {
     this.setErrorMessages();
@@ -33,13 +35,19 @@ export class PrimeErrorComponent implements OnInit, OnChanges {
     
   }
 
-  get hasCrossErrors(): boolean {
-  return Object.keys(this.crossErrorMessages).length > 0;
-}
+ hasCrossErrors(): boolean {
+  
+     if(Object.keys(this.crossErrorMessages).length > 0) {
+      this.crossError = Object.values(this.crossErrorMessages)[0] as string
+      return true;
+     }
+
+     return false;
+  }
 
 
   setErrorMessages(): void {
-    const baseErrorMessages = {
+    const baseErrorMessages : Record<string, string> = {
       required: 'This field is required.',
       email: 'Invalid email address.',
       pattern: 'Invalid format.',
@@ -56,12 +64,21 @@ export class PrimeErrorComponent implements OnInit, OnChanges {
     //   }
     // })
   if(this.errors) {
-      Object.keys(this.errors).forEach((er) => {
-      const inc = Object.keys(baseErrorMessages).includes(er)
-      if(!inc) {
-        this.customErrorMessages[er]! = this.errors?.[er];
+      const firstError = Object.keys(this.errors)[0];
+      // console.log(typeof(firstError));
+      
+      if(Object.keys(baseErrorMessages).includes(firstError)) {
+        this.controllerError = baseErrorMessages[firstError];
+      } else {
+        this.controllerError = this.errors?.[firstError];
       }
-    })
+      
+    //   Object.keys(this.errors).forEach((er) => {
+    //   const inc = Object.keys(baseErrorMessages).includes(er)
+    //   if(!inc) {
+    //     this.customErrorMessages[er]! = this.errors?.[er];
+    //   }
+    // })
   }
 
     console.log(this.crossErrorMessages);

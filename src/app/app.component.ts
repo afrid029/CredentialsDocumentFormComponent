@@ -1,14 +1,17 @@
-import { Component, OnInit, ViewChild, ViewContainerRef, computed, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, computed, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ReactiveFormComponent } from './Components/reactive-form/reactive-form.component';
 import { CommonModule } from '@angular/common';
 import { GetDataService } from './Services/get-data.service';
 import { DataViewModule } from 'primeng/dataview';
+import { ToastModule, ToastPositionType } from 'primeng/toast';
+import { DynamicFormService } from './Services/dynamic-form.service';
+import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ButtonModule, ReactiveFormComponent, CommonModule, DataViewModule],
+  imports: [RouterOutlet, ButtonModule, CommonModule, DataViewModule, ToastModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -18,22 +21,24 @@ export class AppComponent implements OnInit {
   users = signal<any[]>([]);
   filteredData = signal<any>({});
   editId : number | undefined;
+  toastPosition : ToastPositionType = 'top-right';
 
-   @ViewChild('conatiner', {read: ViewContainerRef, static: true})
+  @ViewChild('conatiner', {read: ViewContainerRef, static: true})
   container! : ViewContainerRef;
 
-  /**
-   *
-   */
-  constructor(private dataServ : GetDataService) {}
+  private _dataServ : GetDataService = inject(GetDataService);
+  private _dynamicForm : DynamicFormService =  inject(DynamicFormService);
+  private _ref : DynamicDialogRef = inject(DynamicDialogRef);
+
 ngOnInit(): void {
-  this.users.set(this.dataServ.getData());
+   this.toastPosition = window.innerWidth <= 600 ? 'top-center' : 'top-right';
+  this.users.set(this._dataServ.getData());
 }
   OpenModel(){
-    this.visible.set(true);
-    // //  this.container?.clear();
-    // const dynamicForm = this.container.createComponent(ReactiveFormComponent)
-    // dynamicForm.instance.visible = true;
+    this._ref = this._dynamicForm.CreateDynamicForm('Credentials Document');
+    this._ref.onClose.subscribe(data => {
+      data ? this.onCreate(data) : '';
+    });
 
   }
 
@@ -42,7 +47,11 @@ ngOnInit(): void {
     this.editId = Id;
   const fetched = this.users().filter((p: any) => p.Id == Id)
     this.filteredData.set(fetched[0]);
-    this.visible.set(true);
+    
+    this._ref = this._dynamicForm.UpdateDynamicForm('Credentials Document', this.filteredData);
+    this._ref.onClose.subscribe(data => {
+      data ? this.onUpdate(data) : '';
+    })
     
   }
 
@@ -61,13 +70,8 @@ ngOnInit(): void {
         )
       );
 
-      console.log(this.users());
+    
       
     }
-  
- onClose() {
-    this.visible.set(false);
-    this.filteredData.set({});
-    // this.container.clear();
-  }
+
 }

@@ -65,15 +65,18 @@
 
 
     .p-datepicker-today .p-datepicker-day,
-    .p-datepicker-day:hover,
-    .p-datepicker-select-month:hover,
-    .p-datepicker-select-year:hover,
-    .p-datepicker-month:hover,
-    .p-datepicker-year:hover,
     .p-datepicker-day-selected, 
     .p-datepicker-month-selected, 
     .p-datepicker-year-selected {
         background-color: $color-primary !important;
         color: $color-white !important;
+    }
+
+     .p-datepicker-day:hover,
+    .p-datepicker-select-month:hover,
+    .p-datepicker-select-year:hover,
+    .p-datepicker-month:hover,
+    .p-datepicker-year:hover {
+        background-color: $color-calendar-buttonOnHover!important;
     }
 }

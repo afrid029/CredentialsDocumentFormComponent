@@ -3,10 +3,12 @@
 @mixin p-inputtext {
     .p-inputtext {
         width: $width-full;
-        height: $height-input;
+        // height: $height-input;
+        // min-height: 2rem;
         font-size: $fontSize-input;
         color: $color-inputtext !important;
         border: $input-border !important;
+        padding-block: 0.3rem !important;
     }
 }
 
@@ -24,10 +26,17 @@
     }
 }
 
+@mixin p-input-disabled {
+    .p-inputtext:disabled {
+        background-color: $color-bg-onDisabled !important
+    }
+}
+
 
 @mixin prime-inputtext {
     @include p-inputtext();
     @include p-inputtext-focus();
     @include p-inputtext-placeholder();
+    @include p-input-disabled();
 
 }

@@ -1,4 +1,4 @@
-
+<p-toast [position]="toastPosition"></p-toast>
 <p-button label="Click" (onClick)="OpenModel()"></p-button>
  <p-dataview #dv [value]="users()">
     <ng-template #list let-user>
@@ -13,8 +13,4 @@
     </ng-template>
 </p-dataview>
 
-@if(visible()) {
-
-    <app-reactive-form (onClose) = "onClose()" (onCreate)="onCreate($event)" (onUpdate)="onUpdate($event)" [editData]="filteredData()"></app-reactive-form>
-}
 <router-outlet />

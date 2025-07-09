@@ -8,6 +8,7 @@ import Aura from '@primeng/themes/aura';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
+import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideZoneChangeDetection({ eventCoalescing: true }), 
@@ -20,7 +21,10 @@ export const appConfig: ApplicationConfig = {
         }),
 
   provideHttpClient(),
-  MessageService
+  MessageService,
+  DialogService,
+  DynamicDialogConfig,
+  DynamicDialogRef
 
   ]
   

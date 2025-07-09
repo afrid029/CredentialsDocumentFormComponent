@@ -2,9 +2,37 @@
 
 @mixin toastCss {
     .p-toast-message-error {
-        background-color: $color-error-toast-body-bg !important;
+        background-color: rgba(254, 230, 229, 0.73) !important;
+        border: transparent !important;
+        border-left: 4px solid rgb(182, 4, 4) !important;
     }
+
+    .p-toast-top-center {
+        width: 90% !important;
+    }
+
+    .p-toast-summary {
+        color: rgb(227, 20, 20) !important;
+        font-weight: 500;
+    }
+
+    .p-toast-message-icon {
+        color: rgb(227, 20, 20) !important;
+        width: 25px !important;
+        height: 25px !important;
+    }
+
+    .p-toast-message-icon .p-component svg {
+        width: 25px !important;
+        height: 25px !important;
+    }
+
+    .p-toast-close-button {
+        color: rgb(227, 20, 20) !important;
+    }
+
     .p-toast-message-error .p-toast-detail {
-        color: $color-error-toast-detail !important;
+        color: rgb(256, 56, 56) !important;
+        font-weight: 400;
     }
 }
